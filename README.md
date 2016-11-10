@@ -1,5 +1,16 @@
-Cross Domain Local Storage
-==========================
+(README is not updated, I apologize for being lazy)
+
+it's similar to cross-domain-local-storage,
+but instead of: xdLocalStorage.setItem
+use: xdStorage.local.setItem
+
+if you want to use cross domain session storage:
+xdStorage.session.setItem
+
+...etc
+
+Cross Domain Storage (Local & Session)
+======================================
 
 1. [Problem](#problem)
 2. [Solution](#solution)
@@ -129,4 +140,4 @@ angular.module('yourModule').run(function(xdLocalStorage) {
 
 ## Tests
 
-I covered the basic API with tests [here](https://github.com/ofirdagan/cross-domain-local-storage/blob/master/test/specs/xdLocalStorage.js)
+I covered the basic API with tests [here](https://github.com/ofirdagan/cross-domain-local-storage/blob/master/test/specs/xdStorage.js)
