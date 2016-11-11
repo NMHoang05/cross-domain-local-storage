@@ -204,6 +204,7 @@
         } else if (data.action === 'option') {
           if (data.key == 'auto-sync') {
             autoSync = data.value;
+            postData(data.id, {});
           }
         }
       }
