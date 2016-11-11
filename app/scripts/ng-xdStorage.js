@@ -66,19 +66,22 @@ angular.module('xdStorage', [])
       },
       session: {
         setItem: function (key, value) {
-          return action('local', 'setItem', key, value);
+          return action('session', 'setItem', key, value);
         },
         getItem: function (key) {
-          return action('local', 'getItem', key);
+          return action('session', 'getItem', key);
         },
         removeItem: function (key) {
-          return action('local', 'removeItem', key);
+          return action('session', 'removeItem', key);
         },
         key: function (index) {
-          return action('local', 'key', index);
+          return action('session', 'key', index);
         },
         clear: function () {
-          return action('local', 'clear');
+          return action('session', 'clear');
+        },
+        sync: function () {
+          return action('session', 'sync');
         }
       }
     };

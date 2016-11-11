@@ -8,12 +8,14 @@ window.xdStorage = window.xdStorage || (function () {
   var options = {
     iframeId: 'cross-domain-iframe',
     iframeUrl: undefined,
+    sessionAutoSync: false,
     initCallback: function () {}
   };
   var requestId = -1;
   var iframe;
   var requests = {};
   var wasInit = false;
+  var autoSync = false;
   var iframeReady = true;
 
   function applyCallback(data) {
@@ -33,6 +35,11 @@ window.xdStorage = window.xdStorage || (function () {
     if (data && data.namespace === MESSAGE_NAMESPACE) {
       if (data.id === 'iframe-ready') {
         iframeReady = true;
+        if (options.sessionAutoSync) {
+          buildMessage('session', 'option', 'auto-sync', true, function() {
+            buildMessage('session', 'sync', '',  null, null);
+          });
+        }
         options.initCallback();
       } else {
         applyCallback(data);
@@ -71,7 +78,7 @@ window.xdStorage = window.xdStorage || (function () {
 
   function isApiReady() {
     if (!wasInit) {
-      console.log('You must call xdLocalStorage.init() before using it.');
+      console.log('You must call xdStorage.init() before using it.');
       return false;
     }
     if (!iframeReady) {
@@ -88,7 +95,7 @@ window.xdStorage = window.xdStorage || (function () {
         throw 'You must specify iframeUrl';
       }
       if (wasInit) {
-        console.log('xdLocalStorage was already initialized!');
+        console.log('xdStorage was already initialized!');
         return;
       }
       wasInit = true;
@@ -102,6 +109,11 @@ window.xdStorage = window.xdStorage || (function () {
     },
     wasInit: function () {
       return wasInit;
+    },
+    autoSync: function(flag) {
+      if (flag == null) return autoSync;
+      autoSync = flag;
+      buildMessage('session', 'option', 'auto-sync', flag, null);
     },
     local: {
       setItem: function (key, value, callback) {
@@ -191,6 +203,12 @@ window.xdStorage = window.xdStorage || (function () {
           return;
         }
         buildMessage('session', 'clear', null,  null, callback);
+      },
+      sync: function (keys, callback) {
+        if (!isApiReady()) {
+          return;
+        }
+        buildMessage('session', 'sync', keys,  null, callback);
       }
     }
   };

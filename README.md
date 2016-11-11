@@ -9,6 +9,10 @@ xdStorage.session.setItem
 
 ...etc
 
+the sesion storage can be synchronize between tabs
+use xdStorage.session.sync() to get session data from other tabs.
+xdStorage.autoSync(true) to automatically notify changes to other tabs whenever session data in this tab changes.
+
 Cross Domain Storage (Local & Session)
 ======================================
 

@@ -6,10 +6,14 @@
 (function () {
 
   var MESSAGE_NAMESPACE = 'cross-domain-local-message';
+  var SYNC_STORAGE_NAMESPACE = 'cross-domain-storage-sync';
 
   var defaultData = {
     namespace: MESSAGE_NAMESPACE
   };
+  var autoSync = false;
+  var lastSyncTime = 0;
+  var syncTimer = {};
 
   function postData(id, data) {
     var mergedData = XdUtils.extend(data, defaultData);
@@ -80,11 +84,13 @@
       var data = {
         success: checkGet === value
       };
+      if (autoSync && data.success) session.syncAuto(key, value);
       postData(id, data);
     },
 
     removeData: function(id, key) {
       sessionStorage.removeItem(key);
+      if (autoSync) session.syncAuto(key, null);
       postData(id, {});
     },
 
@@ -104,8 +110,51 @@
     },
 
     clear: function(id) {
+      if (autoSync) session.syncAuto(null, null);
       sessionStorage.clear();
       postData(id, {});
+    },
+
+    syncManual: function(id, keys) {
+      var data = {
+        type: 'request',
+        id: id,
+        keys: keys,
+        time: new Date().getTime()
+      };
+      try {
+        localStorage.setItem(SYNC_STORAGE_NAMESPACE, JSON.stringify(data));
+        localStorage.removeItem(SYNC_STORAGE_NAMESPACE);
+      } catch(err) {
+        postData(id, {status: 1, message: err});
+        return;
+      }
+
+      syncTimer[id] = setTimeout(function() {
+        delete syncTimer[id];
+        // sync timed out
+        postData(id, {status: 1, message: 'timed out'});
+      }, 1000);
+    },
+
+    syncAuto: function(key, value) {
+      var i;
+
+      var respond = { type: 'response', id: null, keys: [], hash: {} };
+      if (key != null) {
+        respond.keys.push(key);
+        respond.hash[key] = value;
+      } else {
+        var k;
+        for(i = 0; i < sessionStorage.length; i++) {
+          k = sessionStorage.key(i);
+          respond.keys.push(k);
+          respond.hash[k] = sessionStorage.getItem(k);
+        }
+      }
+
+      localStorage.setItem(SYNC_STORAGE_NAMESPACE, JSON.stringify(respond));
+      localStorage.removeItem(SYNC_STORAGE_NAMESPACE);
     }
   };
 
@@ -150,15 +199,95 @@
           session.getLength(data.id);
         } else if (data.action === 'clear') {
           session.clear(data.id);
+        } else if (data.action === 'sync') {
+          session.syncManual(data.id, data.key);
+        } else if (data.action === 'option') {
+          if (data.key == 'auto-sync') {
+            autoSync = data.value;
+          }
         }
+      }
+    }
+  }
+
+  function storageProcess(event) {
+    if (event.newValue == null) return;
+    if (event.key != SYNC_STORAGE_NAMESPACE) return;
+    var data;
+    try {
+      data = JSON.parse(event.newValue);
+    } catch (err) {
+      //not our message, can ignore
+      return;
+    }
+
+    var i;
+    if (data.type == 'request') {
+      var keys = [];
+      if (data.keys == null || typeof data.keys != 'string' || data.keys.trim().length == 0) {
+        for( i = 0; i < sessionStorage.length; i++) {
+          keys.push(sessionStorage.key(i));
+        }
+      } else {
+        keys = JSON.parse(data.keys);
+      }
+
+      var respond = { type: 'response', id: data.id, keys: keys, hash: {} };
+      for( i = 0; i < keys.length; i++) {
+        respond.hash[keys[i]] = sessionStorage.getItem(keys[i]);
+      }
+
+      localStorage.setItem(SYNC_STORAGE_NAMESPACE, JSON.stringify(respond));
+      localStorage.removeItem(SYNC_STORAGE_NAMESPACE);
+      return;
+    }
+
+    if (data.type == 'response') {
+      if (!data.keys || !data.keys.length) {
+        if (data.id) {
+          if (lastSyncTime == 0) {
+            lastSyncTime = new Date().getTime();
+          }
+
+          if (syncTimer[data.id]) {
+            clearTimeout(syncTimer[data.id]);
+            delete syncTimer[data.id];
+          }
+
+          postData(data.id, {status: 2, message: 'nothing to sync  ' + JSON.stringify(data)});
+        }
+        return;
+      }
+
+      for( i = 0; i < data.keys.length; i++) {
+        if (data.hash[data.keys[i]] == null) {
+          sessionStorage.removeItem(data.keys[i]);
+        } else {
+          sessionStorage.setItem(data.keys[i], data.hash[data.keys[i]]);
+        }
+      }
+
+      if (data.id) {
+        if (lastSyncTime == 0) {
+          lastSyncTime = new Date().getTime();
+        }
+
+        if (syncTimer[data.id]) {
+          clearTimeout(syncTimer[data.id]);
+          delete syncTimer[data.id];
+        }
+
+        postData(data.id, {status: 0, message: 'sync completed'});
       }
     }
   }
 
   if (window.addEventListener) {
     window.addEventListener('message', receiveMessage, false);
+    window.addEventListener('storage', storageProcess, false);
   } else {
     window.attachEvent('onmessage', receiveMessage);
+    window.attachEvent('onstorage', storageProcess);
   }
 
   function sendOnLoad() {
