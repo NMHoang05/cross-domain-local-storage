@@ -1,5 +1,6 @@
 /**
  * Created by dagan on 07/04/2014.
+ * Modified by hoang on 11/24/2016
  */
 'use strict';
 /* global console, XdUtils */
@@ -9,7 +10,8 @@ window.xdStorage = window.xdStorage || (function () {
     iframeId: 'cross-domain-iframe',
     iframeUrl: undefined,
     sessionAutoSync: false,
-    initCallback: function () {}
+    initCallback: function () {},
+    sessionSyncNotify: null
   };
   var requestId = -1;
   var iframe;
@@ -19,6 +21,12 @@ window.xdStorage = window.xdStorage || (function () {
   var iframeReady = true;
 
   function applyCallback(data) {
+    if (data.id == null) {
+      if (typeof options.sessionSyncNotify == 'function') {
+        options.sessionSyncNotify(data);
+      }
+      return;
+    }
     if (requests[data.id]) {
       requests[data.id](data);
       delete requests[data.id];

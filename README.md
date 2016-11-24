@@ -9,9 +9,22 @@ xdStorage.session.setItem
 
 ...etc
 
-the sesion storage can be synchronize between tabs
+the session storage can be synchronize between tabs
 use xdStorage.session.sync() to get session data from other tabs.
 xdStorage.autoSync(true) to automatically notify changes to other tabs whenever session data in this tab changes.
+
+callback function sessionSyncNotify has been added: this function is called whenever session storage receives a sync from other tab.
+the "data" parameter of this function contains keys and a hash (keys, values) that have been changed. (a "null" value depicts removing of corresponding key)
+
+## Limitations
+
+Apple has updated the defaults on Safari 7+ both on desktop and mobile to block 3rd party data. The option is now called "Block cookies and other website data" which refers to things like localstorage which are now completely isolated by domain.
+
+This implies that unfortunately this library will not be able to share cross domain information on Safari 7+. 
+
+`Session storage still works.`
+
+(iOS-only problem) you will **not be able to sync session storage** between tabs as javascript _`is paused`_ within inactive tabs.
 
 Cross Domain Storage (Local & Session)
 ======================================

@@ -31,10 +31,12 @@
     <script type="text/javascript">
         xdStorage.init({
             iframeUrl:'https://rawgit.com/NMHoang05/cross-domain-storage/master/app/views/cross-domain-storage.html',
-            sessionAutoSync: sessionStorage.getItem('auto-sync') == 'true',
             initCallback: function () {
                 console.log('Got iframe ready');
                 xdStorage.local.setItem('check', 'no callback');
+            },
+            sessionSyncNotify: function(data) {
+                console.log('sync-ed data ', data);
             }
         });
         var storageType = 'local';

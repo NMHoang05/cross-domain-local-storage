@@ -1,5 +1,6 @@
 /**
  * Created by dagan on 07/04/2014.
+ * Modified by hoang on 11/24/2016
  */
 'use strict';
 /* global XdUtils */
@@ -118,6 +119,7 @@
     syncManual: function(id, keys) {
       var data = {
         type: 'request',
+        method: 'manual',
         id: id,
         keys: keys,
         time: new Date().getTime()
@@ -140,7 +142,7 @@
     syncAuto: function(key, value) {
       var i;
 
-      var respond = { type: 'response', id: null, keys: [], hash: {} };
+      var respond = { type: 'response', method: 'auto', id: null, keys: [], hash: {} };
       if (key != null) {
         respond.keys.push(key);
         respond.hash[key] = value;
@@ -149,7 +151,7 @@
         for(i = 0; i < sessionStorage.length; i++) {
           k = sessionStorage.key(i);
           respond.keys.push(k);
-          respond.hash[k] = sessionStorage.getItem(k);
+          respond.hash[k] = null;
         }
       }
 
@@ -279,6 +281,8 @@
         }
 
         postData(data.id, {status: 0, message: 'sync completed'});
+      } else {
+        if (data.method == 'auto') postData(null, {status: 0, keys: data.keys, hash: data.hash});
       }
     }
   }
