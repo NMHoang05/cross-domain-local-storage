@@ -23,33 +23,66 @@
   }
 
   var local = {
-    getData: function(id, key)
-    {
-      var value = localStorage.getItem(key);
-      var data = {
-        key: key,
-        value: value
-      };
-      postData(id, data);
+    getData: function(id, key) {
+      if (Array.isArray(key)) {
+        var values = [];
+        for(var i = 0; i < key.length; i++) {
+          values.push(localStorage.getItem(key[i]));
+        }
+        postData(id, {
+          key: key,
+          value: values
+        });
+      } else {
+        postData(id, {
+          key: key,
+          value: localStorage.getItem(key)
+        });
+      }
     },
 
     setData: function(id, key, value) {
-      localStorage.setItem(key, value);
-      var checkGet = localStorage.getItem(key);
-      var data = {
-        success: checkGet === value
-      };
-      postData(id, data);
+      if (Array.isArray(key)) {
+        var values = [];
+        var ok;
+        for(var i = 0; i < key.length; i++) {
+          localStorage.setItem(key[i], value[i]);
+          ok = value[i] === localStorage.getItem(key[i]);
+          values.push(ok);
+        }
+        postData(id, {
+          key: key,
+          success: values
+        });
+      } else {
+        localStorage.setItem(key, value);
+        postData(id, {
+          success: localStorage.getItem(key) === value
+        });
+      }
     },
 
     removeData: function(id, key) {
-      localStorage.removeItem(key);
+      if (Array.isArray(key)) {
+        for(var i = 0; i < key.length; i++) {
+          localStorage.removeItem(key[i]);
+        }
+      } else {
+        localStorage.removeItem(key);
+      }
       postData(id, {});
     },
 
     getKey: function(id, index) {
-      var key = localStorage.key(index);
-      postData(id, {key: key});
+      if (Array.isArray(index)) {
+        var keys = [];
+        for(var i = 0; i < index.length; i++) {
+          keys.push(localStorage.key(index[i]));
+        }
+        postData(id, {key: keys});
+      } else {
+        postData(id, {key: localStorage.key(index)});
+      }
     },
 
     getSize: function(id) {
@@ -69,35 +102,76 @@
   };
 
   var session = {
-    getData: function(id, key)
-    {
-      var value = sessionStorage.getItem(key);
-      var data = {
-        key: key,
-        value: value
-      };
-      postData(id, data);
+    getData: function(id, key) {
+      if (Array.isArray(key)) {
+        var values = [];
+        for(var i = 0; i < key.length; i++) {
+          values.push(sessionStorage.getItem(key[i]));
+        }
+        postData(id, {
+          key: key,
+          value: values
+        });
+      } else {
+        postData(id, {
+          key: key,
+          value: sessionStorage.getItem(key)
+        });
+      }
     },
 
     setData: function(id, key, value) {
-      sessionStorage.setItem(key, value);
-      var checkGet = sessionStorage.getItem(key);
-      var data = {
-        success: checkGet === value
-      };
-      if (autoSync && data.success) session.syncAuto(key, value);
-      postData(id, data);
+      if (Array.isArray(key)) {
+        var values = [];
+        var sync_k = [];
+        var sync_v = [];
+        var ok;
+        for(var i = 0; i < key.length; i++) {
+          sessionStorage.setItem(key[i], value[i]);
+          ok = value[i] === sessionStorage.getItem(key[i]);
+          values.push(ok);
+          if (ok) {
+            sync_k.push(key[i]);
+            sync_v.push(value[i]);
+          }
+        }
+        if (autoSync && sync_k.length > 0) session.syncAuto(sync_k, sync_v);
+        postData(id, {
+          key: key,
+          success: values
+        });
+      } else {
+        sessionStorage.setItem(key, value);
+        var data = {
+          success: sessionStorage.getItem(key) === value
+        };
+        if (autoSync && data.success) session.syncAuto(key, value);
+        postData(id, data);
+      }
     },
 
     removeData: function(id, key) {
-      sessionStorage.removeItem(key);
+      if (Array.isArray(key)) {
+        for(var i = 0; i < key.length; i++) {
+          sessionStorage.removeItem(key[i]);
+        }
+      } else {
+        sessionStorage.removeItem(key);
+      }
       if (autoSync) session.syncAuto(key, null);
       postData(id, {});
     },
 
     getKey: function(id, index) {
-      var key = sessionStorage.key(index);
-      postData(id, {key: key});
+      if (Array.isArray(index)) {
+        var keys = [];
+        for(var i = 0; i < index.length; i++) {
+          keys.push(sessionStorage.key(index[i]));
+        }
+        postData(id, {key: keys});
+      } else {
+        postData(id, {key: sessionStorage.key(index)});
+      }
     },
 
     getSize: function(id) {
@@ -141,11 +215,17 @@
 
     syncAuto: function(key, value) {
       var i;
-
       var respond = { type: 'response', method: 'auto', id: null, keys: [], hash: {} };
       if (key != null) {
-        respond.keys.push(key);
-        respond.hash[key] = value;
+        if (Array.isArray(key)) {
+          for(i = 0; i < key.length; i++) {
+            respond.keys.push(key[i]);
+            respond.hash[key[i]] = value[i];
+          }
+        } else {
+          respond.keys.push(key);
+          respond.hash[key] = value;
+        }
       } else {
         var k;
         for(i = 0; i < sessionStorage.length; i++) {

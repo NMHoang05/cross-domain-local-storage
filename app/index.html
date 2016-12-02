@@ -60,13 +60,36 @@
             var key = document.getElementById("keyInput").value;
             if(key) {
                 var value = document.getElementById("valueInput").value;
-                xdStorage[storageType].setItem(key, value, function (data) {
-                    if(data.success) {
-                        document.getElementById('result').innerHTML = 'Your data has been successfully stored.';
-                    } else {
-                        document.getElementById('result').innerHTML = 'Ops, could not store your data.';
-                    }
-                });
+                var keys = null;
+                var values = null;
+                try {
+                    keys = JSON.parse(key);
+                } catch(e) {
+                }
+                if (Array.isArray(keys)) {
+                    xdStorage[storageType].setItem(keys, JSON.parse(value), function (data) {
+                        var all = true;
+                        for(var i = 0; i < data.success.length; i++) {
+                            if (!data.success[i]) {
+                                all = false;
+                                break;
+                            }
+                        }
+                        if(all) {
+                            document.getElementById('result').innerHTML = 'Your data has been successfully stored.';
+                        } else {
+                            document.getElementById('result').innerHTML = 'Ops, could not store your data.';
+                        }
+                    });
+                } else {
+                    xdStorage[storageType].setItem(key, value, function (data) {
+                        if (data.success) {
+                            document.getElementById('result').innerHTML = 'Your data has been successfully stored.';
+                        } else {
+                            document.getElementById('result').innerHTML = 'Ops, could not store your data.';
+                        }
+                    });
+                }
             } else {
                 alert('You must enter a key.');
             }
@@ -74,10 +97,25 @@
         function getItem () {
             document.getElementById('result').innerHTML ='';
             var key = document.getElementById("getInput").value;
-            if(key) {
-                xdStorage[storageType].getItem(key, function (data) {
-                    document.getElementById('result').innerHTML = 'got value: "' + data.value + '" for key: "' + data.key + '"';
-                });
+            if (key) {
+                var keys = null;
+                try {
+                    keys = JSON.parse(key);
+                } catch(e) {
+                }
+                if (Array.isArray(keys)) {
+                    xdStorage[storageType].getItem(keys, function (data) {
+                        var result = [];
+                        for (var i = 0; i < data.value.length; i++) {
+                            result.push('got value: "' + data.value[i] + '" for key: "' + data.key[i] + '"');
+                        }
+                        document.getElementById('result').innerHTML = result.join('<br/>');
+                    });
+                } else {
+                    xdStorage[storageType].getItem(key, function (data) {
+                        document.getElementById('result').innerHTML = 'got value: "' + data.value + '" for key: "' + data.key + '"';
+                    });
+                }
             } else {
                 alert('You must enter a key to get.');
             }
@@ -86,7 +124,12 @@
             document.getElementById('result').innerHTML ='';
             var key = document.getElementById("removeInput").value;
             if(key) {
-                xdStorage[storageType].removeItem(key, function (data) {
+                var keys = null;
+                try {
+                    keys = JSON.parse(key);
+                } catch(e) {
+                }
+                xdStorage[storageType].removeItem( keys || key, function (data) {
                     document.getElementById('result').innerHTML = 'Key was removed';
                 });
             } else {
@@ -97,9 +140,24 @@
             document.getElementById('result').innerHTML ='';
             var index = document.getElementById("keyNameInput").value;
             if(index) {
-                xdStorage[storageType].key(index, function (data) {
-                    document.getElementById('result').innerHTML = 'Key name for index ' + index + ' is: '+data.key;
-                });
+                var indices = null;
+                try {
+                    indices = JSON.parse(index);
+                } catch(e) {
+                }
+                if (Array.isArray(indices)) {
+                    xdStorage[storageType].key(indices, function (data) {
+                        var result = [];
+                        for (var i = 0; i < data.key.length; i++) {
+                            result.push('Key name for index ' + indices[i] + ' is: ' + data.key[i]);
+                        }
+                        document.getElementById('result').innerHTML = result.join('<br/>');
+                    });
+                } else {
+                    xdStorage[storageType].key(index, function (data) {
+                        document.getElementById('result').innerHTML = 'Key name for index ' + index + ' is: ' + data.key;
+                    });
+                }
             } else {
                 alert('You must enter a key index.');
             }
@@ -127,6 +185,7 @@
 <h3 class="header">Local & Session</h3>
 <div class="content">
     <div><label><input type="radio" name="storage-type" value="local" checked onchange="setType(this.value)" /> Local</label><label><input type="radio" name="storage-type" value="session" onchange="setType(this.value)" /> session</label></div>
+    <p>(to test with array of keys/values, input a JSON of array)</p>
     <div><div class="label">Enter key name: </div><input id="keyInput" type="text" /></div>
     <div><div class="label">Enter value: </div><input id="valueInput" type="text" /></div>
     <button onclick="setValue()">Set Value</button>

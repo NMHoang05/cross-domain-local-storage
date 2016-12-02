@@ -16,6 +16,8 @@ xdStorage.autoSync(true) to automatically notify changes to other tabs whenever 
 callback function sessionSyncNotify has been added: this function is called whenever session storage receives a sync from other tab.
 the "data" parameter of this function contains keys and a hash (keys, values) that have been changed. (a "null" value depicts removing of corresponding key)
 
+added support for setItem, getItem, removeItem with multiple keys, just pass an array of string to parameter "key" and "value". 
+
 ## Limitations
 
 Apple has updated the defaults on Safari 7+ both on desktop and mobile to block 3rd party data. The option is now called "Block cookies and other website data" which refers to things like localstorage which are now completely isolated by domain.
