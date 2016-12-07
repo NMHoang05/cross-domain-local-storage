@@ -66,7 +66,11 @@ window.xdStorage = window.xdStorage || (function () {
       key: key,
       value: value
     };
+
+    var tmp = Array.prototype.toJSON;
+    delete Array.prototype.toJSON; // avoid conflict with older version of Prototype
     iframe.contentWindow.postMessage(JSON.stringify(data), '*');
+    Array.prototype.toJSON = tmp
   }
 
   function init(customOptions) {
@@ -115,6 +119,7 @@ window.xdStorage = window.xdStorage || (function () {
         };
       }
     },
+    version: '3.0.6',
     wasInit: function () {
       return wasInit;
     },
