@@ -18,7 +18,7 @@ window.xdStorage = window.xdStorage || (function () {
   var requests = {};
   var wasInit = false;
   var autoSync = false;
-  var iframeReady = true;
+  var iframeReady = false;
 
   function applyCallback(data) {
     if (data.id == null) {
@@ -114,12 +114,35 @@ window.xdStorage = window.xdStorage || (function () {
       if (document.readyState === 'complete') {
         init(customOptions);
       } else {
-        window.onload = function () {
-          init(customOptions);
-        };
+        (function(opts) {
+          var loaded = false;
+          function onloadWindow() {
+            if (loaded) return;
+            loaded = true;
+
+            init(opts);
+          }
+          // Mozilla, Opera and webkit nightlies currently support this event
+          if ( document.addEventListener ) {
+            // Use the handy event callback
+            document.addEventListener( "DOMContentLoaded", onloadWindow, false );
+
+            // A fallback to window.onload, that will always work
+            window.addEventListener( "load", onloadWindow, false );
+
+            // If IE event model is used
+          } else if ( document.attachEvent ) {
+            // ensure firing before onload,
+            // maybe late but safe also for iframes
+            document.attachEvent( "onreadystatechange", onloadWindow );
+
+            // A fallback to window.onload, that will always work
+            window.attachEvent( "onload", onloadWindow );
+          }
+        })(customOptions);
       }
     },
-    version: '3.0.6',
+    version: '3.0.8',
     wasInit: function () {
       return wasInit;
     },
