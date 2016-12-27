@@ -47,9 +47,7 @@ angular.module('xdStorage', [])
         xdStorage.init(options);
         return defer.promise;
       },
-      version: function() {
-        return xdStorage.version();
-      },
+      version: xdStorage.version,
       local: {
         setItem: function (key, value) {
           return action('local', 'setItem', key, value);

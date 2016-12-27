@@ -10,7 +10,8 @@
   var SYNC_STORAGE_NAMESPACE = 'cross-domain-storage-sync';
 
   var defaultData = {
-    namespace: MESSAGE_NAMESPACE
+    namespace: MESSAGE_NAMESPACE,
+    normal_response: true
   };
   var autoSync = false;
   var lastSyncTime = 0;
@@ -246,6 +247,21 @@
       data = JSON.parse(event.data);
     } catch (err) {
       //not our message, can ignore
+      return;
+    }
+
+    try {
+      // check if storages are enabled
+      var l = localStorage.length;
+      l = sessionStorage.length;
+      console.log("Test storage blocking" + l);
+    } catch (err) {
+      //blocked
+      postData(data.id, {
+        normal_response: false,
+        error: err.toString()
+      });
+      return;
     }
 
     if (data && data.namespace === MESSAGE_NAMESPACE) {

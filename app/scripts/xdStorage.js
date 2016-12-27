@@ -39,6 +39,7 @@ window.xdStorage = window.xdStorage || (function () {
       data = JSON.parse(event.data);
     } catch (err) {
       //not our message, can ignore
+      return;
     }
     if (data && data.namespace === MESSAGE_NAMESPACE) {
       if (data.id === 'iframe-ready') {
@@ -50,6 +51,9 @@ window.xdStorage = window.xdStorage || (function () {
         }
         options.initCallback();
       } else {
+        if (!data.normal_response) {
+          console.log("Error: " + data.error);
+        }
         applyCallback(data);
       }
     }
@@ -142,7 +146,7 @@ window.xdStorage = window.xdStorage || (function () {
         })(customOptions);
       }
     },
-    version: '3.0.8',
+    version: '3.0.12',
     wasInit: function () {
       return wasInit;
     },
