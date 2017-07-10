@@ -72,9 +72,13 @@ window.xdStorage = window.xdStorage || (function () {
     };
 
     var tmp = Array.prototype.toJSON;
-    delete Array.prototype.toJSON; // avoid conflict with older version of Prototype
-    iframe.contentWindow.postMessage(JSON.stringify(data), '*');
-    Array.prototype.toJSON = tmp
+    if (tmp) {
+      delete Array.prototype.toJSON; // avoid conflict with older version of Prototype
+      iframe.contentWindow.postMessage(JSON.stringify(data), '*');
+      Array.prototype.toJSON = tmp
+    } else {
+      iframe.contentWindow.postMessage(JSON.stringify(data), '*');
+    }
   }
 
   function init(customOptions) {
@@ -146,7 +150,7 @@ window.xdStorage = window.xdStorage || (function () {
         })(customOptions);
       }
     },
-    version: '3.0.12',
+    version: '3.0.13',
     wasInit: function () {
       return wasInit;
     },
