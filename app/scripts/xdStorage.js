@@ -150,7 +150,7 @@ window.xdStorage = window.xdStorage || (function () {
         })(customOptions);
       }
     },
-    version: '3.0.13',
+    version: '3.0.14',
     wasInit: function () {
       return wasInit;
     },
@@ -158,6 +158,9 @@ window.xdStorage = window.xdStorage || (function () {
       if (flag == null) return autoSync;
       autoSync = flag;
       buildMessage('session', 'option', 'auto-sync', flag, null);
+    },
+    sessionSyncNotifier: function(func) {
+      options.sessionSyncNotify = func;
     },
     local: {
       setItem: function (key, value, callback) {
